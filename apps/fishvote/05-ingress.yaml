@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fishvote
+  namespace: fishvote
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-clusterissuer  # CHANGE if needed
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - fish.local
+    secretName: fishvote-tls
+  rules:
+  - host: fish.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fishvote
+            port:
+              number: 80

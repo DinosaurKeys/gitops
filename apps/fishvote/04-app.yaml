@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fishvote-app
+  namespace: fishvote
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fishvote-app
+  
+  template:
+    metadata:
+      labels:
+        app: fishvote-app
+    
+    spec:
+      #imagePullSecrets:
+      #- name: ghcr-pull
+      
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.36
+        command: ["sh","-lc","until nc -z mariadb 3306; do echo waiting for db; sleep 2; done;"]
+      
+      containers:
+      - name: app
+        image: ghcr.io/dinosaurkeys/fishvote:1.0   # CHANGE THIS
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DB_HOST
+          value: mariadb
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          valueFrom: { secretKeyRef: { name: fishvote-secrets, key: DB_NAME } }
+        - name: DB_USER
+          valueFrom: { secretKeyRef: { name: fishvote-secrets, key: DB_USER } }
+        - name: DB_PASSWORD
+          valueFrom: { secretKeyRef: { name: fishvote-secrets, key: DB_PASSWORD } }
+        - name: ADMIN_KEY
+          valueFrom: { secretKeyRef: { name: fishvote-secrets, key: ADMIN_KEY } }
+        - name: PORT
+          value: "3000"
+        readinessProbe:
+          httpGet: { path: /health, port: 3000 }
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: { path: /health, port: 3000 }
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fishvote
+  namespace: fishvote
+spec:
+  selector:
+    app: fishvote-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
