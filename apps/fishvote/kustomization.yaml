@@ -1,0 +1,7 @@
+resources:
+  - 00-namespace.yaml
+  - 01-secret.yaml
+  - 02-configmap-initdb.yaml
+  - 03-mariadb.yaml
+  - 04-app.yaml
+  - 05-ingress.yaml
