@@ -5,7 +5,7 @@ metadata:
   namespace: fishvote
 
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: fishvote-app
